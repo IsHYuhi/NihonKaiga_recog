@@ -104,12 +104,12 @@ def main():
 
     batch_size = 32
 
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True,  num_workers=4)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False,  num_workers=4)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     dataloaders_dict = {"train": train_dataloader, "val": val_dataloader}
-    num_epochs=2
+    num_epochs=300
     train_model(net, dataloaders_dict, criterion, optimizer, num_epochs=num_epochs)
 
 if __name__ == "__main__":
