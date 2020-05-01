@@ -108,7 +108,7 @@ def plot_log(types, data):
     plt.savefig('./result/'+ types +'.png')
 
 def main():
-    size = 32
+    size = 256
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     train_list, val_list = make_datapath_list(phase="train", rate=0.9)
