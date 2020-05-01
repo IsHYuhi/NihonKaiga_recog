@@ -87,9 +87,6 @@ def train_model(net, dataloaders_dict, criterion, optimizer, num_epochs):
             f1s[phase].append(f1score)
 
             print('{} Loss: {:.4f} Acc: {:.4f} F1: {:.4f}'.format(phase, epoch_loss, epoch_acc, f1score))
-            print(losses[phase])
-            print(accuracies[phase])
-            print(f1s[phase])
             plot_log('loss', losses)
             plot_log('acc', accuracies)
             plot_log('f1', f1s)
