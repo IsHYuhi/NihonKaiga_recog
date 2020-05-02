@@ -4,6 +4,7 @@ import torch.nn as nn
 from tqdm import tqdm
 import torch
 from utils.data_set import NishikaDataset, ImageTransform, make_datapath_list
+from models.model import EfficientNet
 import os
 from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
@@ -13,7 +14,8 @@ torch.manual_seed(44)
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-net = models.resnet101(pretrained=False, num_classes=8)
+net = EfficientNet.from_name('efficientnet-b7')
+#net = models.resnet101(pretrained=False, num_classes=8)
 #net = models.resnet152(pretrained=False, num_classes=8)
 
 net = net.to(device)
@@ -106,7 +108,7 @@ def plot_log(types, data):
     plt.savefig('./result/'+ types +'.png')
 
 def main():
-    size = 32
+    size = 32#224
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     train_list, val_list = make_datapath_list(phase="train", rate=0.9)
