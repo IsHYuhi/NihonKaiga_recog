@@ -15,6 +15,7 @@ import torch.optim as optim
 import torch.utils.data as data
 import torchvision
 from torchvision import models, transforms
+from .autoaugment import ImageNetPolicy
 
 random.seed(44)
 
@@ -53,15 +54,23 @@ class ImageTransform():
             'train': transforms.Compose([
                 transforms.RandomResizedCrop(resize, scale=(0.5, 1.0)),
                 transforms.RandomHorizontalFlip(),
+                ImageNetPolicy(),
                 transforms.ToTensor(),
-                transforms.Normalize(mean, std)
+                transforms.Normalize(mean, std),
+                transforms.RandomErasing(),
             ]),
             'val': transforms.Compose([
                 transforms.Resize(resize),
                 transforms.CenterCrop(resize),
                 transforms.ToTensor(),
-                transforms.Normalize(mean, std)
-            ])
+                transforms.Normalize(mean, std),
+            ]),
+            'test': transforms.Compose([
+                transforms.Resize(resize),
+                transforms.CenterCrop(resize),
+                transforms.ToTensor(),
+                transforms.Normalize(mean, std),
+            ]),
         }
 
     def __call__(self, img, phase='train'):
@@ -79,6 +88,10 @@ def make_datapath_list(phase="train", rate=0.8):
     for path in glob.glob(target_path):
         path_list.append(path)
 
-    num = len(path_list)
-    random.shuffle(path_list)
-    return path_list[:int(num*rate)], path_list[int(num*rate):]
+    if phase=='train':
+        num = len(path_list)
+        random.shuffle(path_list)
+        return path_list[:int(num*rate)], path_list[int(num*rate):]
+
+    elif phase=='test':
+        return path_list
