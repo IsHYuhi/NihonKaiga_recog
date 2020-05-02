@@ -67,16 +67,17 @@ def main():
     size = 224
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
-    test_list = make_datapath_list(phase="test")
-    csv_path = './data/sample_submission.csv'
+    #test_list = make_datapath_list(phase="test")
+    #csv_path = './data/sample_submission.csv'
+    test_df = pd.read_csv('./data/sample_submission.csv')
+    test_label_dic = dict(zip(test_df['image'], test_df['gender_status']))
 
-    test_dataset = NishikaDataset(file_list=test_list, transform=ImageTransform(size, mean, std), phase='test', csv_path=csv_path)
+    test_dataset = NishikaDataset(label_dic=test_label_dic, root_dir='./data/test', transform=ImageTransform(size, mean, std), phase='test')
 
     batch_size = 32
 
     test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    test_df = pd.read_csv(csv_path)
     preds = predict(net, test_dataloader)
     test_df['gender_status'] = preds
     save_path = './result/submission.csv'

@@ -6,8 +6,10 @@ import torch
 from utils.data_set import NishikaDataset, ImageTransform, make_datapath_list
 from models.model import EfficientNet
 import os
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
+import pandas as pd
 
 torch.manual_seed(44)
 
@@ -95,7 +97,7 @@ def train_model(net, dataloaders_dict, criterion, optimizer, num_epochs):
             plot_log('f1', f1s)
 
             if((epoch+1)%10 == 0):
-                torch.save(net.state_dict(), 'checkpoints/resnet101_'+str(epoch+1)+'.pth')
+                torch.save(net.state_dict(), 'checkpoints/net_'+str(epoch+1)+'.pth')
 
 def plot_log(types, data):
     plt.cla()
@@ -108,14 +110,23 @@ def plot_log(types, data):
     plt.savefig('./result/'+ types +'.png')
 
 def main():
-    size = 32#224
+    size = 224
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
-    train_list, val_list = make_datapath_list(phase="train", rate=0.9)
-    csv_path = './data/train.csv'
+    #train_list, val_list = make_datapath_list(phase="train", rate=0.9)
+    #csv_path = './data/train.csv'
 
-    train_dataset = NishikaDataset(file_list=train_list, transform=ImageTransform(size, mean, std), phase='train', csv_path=csv_path)
-    val_dataset = NishikaDataset(file_list=val_list, transform=ImageTransform(size, mean, std), phase='val', csv_path=csv_path)
+    label_df = pd.read_csv('./data/train.csv')
+    tmp_df = label_df[label_df['gender_status'] == 5]
+    label_df = label_df[label_df['gender_status'] != 5]
+    val_size = 0.1
+    train_df, val_df = train_test_split(label_df, test_size=val_size, random_state=42, stratify=label_df['gender_status'])
+    train_df = pd.concat([train_df, tmp_df])
+    train_label_dic = dict(zip(train_df['image'], train_df['gender_status']))
+    val_label_dic = dict(zip(val_df['image'], val_df['gender_status']))
+
+    train_dataset = NishikaDataset(label_dic=train_label_dic, root_dir='./data/train/', transform=ImageTransform(size, mean, std), phase='train')
+    val_dataset = NishikaDataset(label_dic=val_label_dic, root_dir='./data/train/', transform=ImageTransform(size, mean, std), phase='val')
 
     batch_size = 32
 

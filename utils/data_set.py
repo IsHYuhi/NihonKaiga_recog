@@ -20,33 +20,26 @@ from .autoaugment import ImageNetPolicy
 random.seed(44)
 
 class NishikaDataset(data.Dataset):
-    def __init__(self, file_list, transform=None, phase='train', csv_path='None'):
-        self.file_list = file_list
+    def __init__(self, label_dic, root_dir, transform=None, phase='train'):
+        self.label_dic = label_dic
+        self.root_dir = root_dir
+        self.images = list(label_dic.keys())
         self.transform = transform
         self.phase = phase
-        self.csv_path = csv_path
-        self.csv_dic={}
-        with open(self.csv_path) as f:
-            reader = csv.reader(f)
-            for row in reader:
-                self.csv_dic[row[0]] = row[1]
 
     def __len__(self):
-        return len(self.file_list)
+        return len(self.images)
 
     def __getitem__(self, index):
         '''
         get tensor type preprocessed data and labels
         '''
-
-        img_path = self.file_list[index]
-        img = Image.open(img_path) #[H][W][C]
-
+        filename = self.images[index]
+        img = Image.open(os.path.join(self.root_dir, filename))
         img_transformed = self.transform(img, self.phase)
 
-        label = self.csv_dic[img_path.split('/')[3]]
-
-        return img_transformed, int(label)
+        label = self.label_dic[filename]
+        return img_transformed, label
 
 class ImageTransform():
     def __init__(self, resize, mean, std):
