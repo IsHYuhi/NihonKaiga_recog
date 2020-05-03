@@ -20,6 +20,22 @@ net = EfficientNet.from_name('efficientnet-b7')
 #net = models.resnet101(pretrained=False, num_classes=8)
 #net = models.resnet152(pretrained=False, num_classes=8)
 
+
+#restore checkpoint
+def fix_model_state_dict(state_dict):
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k
+        if name.startswith('module.'):
+            name = name[7:]  # remove 'module.' of dataparallel
+        new_state_dict[name] = v
+    return new_state_dict
+
+load_path = './checkpoints/efficientnet+Ada+Auto300.pth'
+load_weights = torch.load(load_path)
+net.load_state_dict(fix_model_state_dict(load_weights))
+
+
 net = net.to(device)
 
 torch.backends.cudnn.benchmark = True
