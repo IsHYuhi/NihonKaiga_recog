@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
 import pandas as pd
+from collections import OrderedDict
 
 torch.manual_seed(44)
 
@@ -19,7 +20,12 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 net = EfficientNet.from_name('efficientnet-b7')
 #net = models.resnet101(pretrained=False, num_classes=8)
 #net = models.resnet152(pretrained=False, num_classes=8)
+#net = models.wide_resnet50_2(pretrained=False, num_classes=8)
+#net = models.wide_resnet101_2(pretrained=False, num_classes=8)
+#net = models.inception_v3(pretrained=False, aux_logits=False, num_classes=8)
+#net = models.resnext101_32x8d(pretrained=False, num_classes=8)
 
+save_model_name = 'wide_resnet101_2'
 
 #restore checkpoint
 def fix_model_state_dict(state_dict):
@@ -31,9 +37,9 @@ def fix_model_state_dict(state_dict):
         new_state_dict[name] = v
     return new_state_dict
 
-load_path = './checkpoints/efficientnet+Ada+Auto300.pth'
-load_weights = torch.load(load_path)
-net.load_state_dict(fix_model_state_dict(load_weights))
+# load_path = './checkpoints/efficientnet+Ada+Auto300.pth'
+# load_weights = torch.load(load_path)
+# net.load_state_dict(fix_model_state_dict(load_weights))
 
 
 net = net.to(device)
@@ -62,11 +68,10 @@ def train_model(net, dataloaders_dict, criterion, optimizer, num_epochs):
     losses = {'train':train_loss, 'val':val_loss}
     accuracies = {'train':train_accuracy, 'val':val_accuracy}
     f1s = {'train':train_f1, 'val':val_f1}
-
+    max_acc = 0
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch+1, num_epochs))
         print('-------------')
-
         for phase in ['train', 'val']:
             if phase == 'train':
                 net.train()
@@ -112,8 +117,12 @@ def train_model(net, dataloaders_dict, criterion, optimizer, num_epochs):
             plot_log('acc', accuracies)
             plot_log('f1', f1s)
 
+            if(phase == 'val' and max_acc<= epoch_acc):
+                max_acc = epoch_acc
+                torch.save(net.state_dict(), 'checkpoints/'+save_model_name+'_maxacc.pth')
+
             if((epoch+1)%10 == 0):
-                torch.save(net.state_dict(), 'checkpoints/net_'+str(epoch+1)+'.pth')
+                torch.save(net.state_dict(), 'checkpoints/'+save_model_name+'_'+str(epoch+1)+'.pth')
 
 def plot_log(types, data):
     plt.cla()
@@ -123,7 +132,7 @@ def plot_log(types, data):
     plt.xlabel('epoch')
     plt.ylabel(types)
     plt.title(types)
-    plt.savefig('./result/'+ types +'.png')
+    plt.savefig('./result/'+ types+save_model_name+'.png')
 
 def main():
     size = 224
@@ -151,7 +160,7 @@ def main():
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     dataloaders_dict = {"train": train_dataloader, "val": val_dataloader}
-    num_epochs=300
+    num_epochs=500
     train_model(net, dataloaders_dict, criterion, optimizer, num_epochs=num_epochs)
 
 if __name__ == "__main__":
